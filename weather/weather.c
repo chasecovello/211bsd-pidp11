@@ -5,7 +5,6 @@
   2019  rricharz
 */
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,11 +28,11 @@ char *argv[];
     P = -1.0;
     H = -1.0;
 
-    printf("HTTP/1.1 200 OK\r\n");
+    printf("HTTP/1.0 200 OK\r\n");
     printf("Content-Type: text/html\r\n\r\n");
 
     fd = fopen(INCL_PRE, "r");
-    if (fd && !errno) {
+    if (fd) {
         while (!feof(fd) &&
                 (pos = fread(buf, sizeof(*buf), sizeof(buf), fd)) > 0)
             fwrite(buf, sizeof(*buf), pos, stdout);
@@ -44,12 +43,9 @@ char *argv[];
     }
 
     fd = popen("/usr/local/read_sensors", "r");
-    if (fd && !errno) {
-        while (fgets(buf, sizeof(buf), fd)) {
-            if (!strstr(buf, "Permission denied")) {
-                printf("<p>Cannot obtain data from sensor.</p>\n");
-                break;
-            }
+    if (fd) {
+        while (fgets(buf, sizeof(buf), fd) &&
+               !strstr(buf, "Permission denied")) {
 
             sscanf(buf, "%s : %f", heading, &val);
 
@@ -63,7 +59,7 @@ char *argv[];
         pclose(fd);
 
         fd = popen("/usr/local/welcome_html", "r");
-        if (fd && !errno) {
+        if (fd) {
             while (!feof(fd) &&
                     (pos = fread(buf, sizeof(char), sizeof(buf), fd)) > 0)
                 fwrite(buf, sizeof(char), pos, stdout);
@@ -88,7 +84,7 @@ char *argv[];
     }
 
     fd = fopen(INCL_POST, "r");
-    if (fd && !errno) {
+    if (fd) {
         while (!feof(fd) &&
                 (pos = fread(buf, sizeof(*buf), sizeof(buf), fd)) > 0)
             fwrite(buf, sizeof(*buf), pos, stdout);

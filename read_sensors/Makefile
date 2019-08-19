@@ -11,7 +11,7 @@ ${PROGRAM}:	${OBJS}
 	${CC} ${CFLAGS} -o $@ ${OBJS} ${LIBS}
 
 install: ${PROGRAM}
-	install -s -m 755 ${PROGRAM} ${DESTDIR}
+	install -s -m 2755 -g kmem ${PROGRAM} ${DESTDIR}
 
 tags:
 	ctags -tdw *.c

@@ -1,4 +1,4 @@
-DESTDIR= /usr/local
+DESTDIR= /var/www/cgi-bin
 CFLAGS= -O
 PROGRAM=	weather
 SRCS=		weather.c
@@ -11,7 +11,7 @@ ${PROGRAM}:	${OBJS}
 	${CC} ${CFLAGS} -o $@ ${OBJS} ${LIBS}
 
 install: ${PROGRAM}
-	install -s -m 755 ${PROGRAM} ${DESTDIR}
+	install -s -m 111 -o www ${PROGRAM} ${DESTDIR}
 
 tags:
 	ctags -tdw *.c
