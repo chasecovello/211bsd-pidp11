@@ -5,14 +5,16 @@
   2019  rricharz
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define INCL_PRE  "/var/www/cgi-bin/include/weather.incl-pre"
 #define INCL_POST "/var/www/cgi-bin/include/weather.incl-post"
 #define BUF_SIZE 256
 
-int main (argc,argv)
+int main(argc,argv)
 int argc;
 char *argv[];
 {
@@ -31,36 +33,43 @@ char *argv[];
     printf("Content-Type: text/html\r\n\r\n");
 
     fd = fopen(INCL_PRE, "r");
-    if (!fd) {
-	    printf("<html><head><title>PDP-11 Weather Station</title></head><body>\n");
-    } else {
+    if (fd && !errno) {
         while (!feof(fd) &&
                 (pos = fread(buf, sizeof(*buf), sizeof(buf), fd)) > 0)
             fwrite(buf, sizeof(*buf), pos, stdout);
 
         fclose(fd);
+    } else {
+        printf("<html><head><title>PDP-11 Weather Station</title></head><body>\n");
     }
 
     fd = popen("/usr/local/read_sensors", "r");
-    if (fd && !strstr(fd, "Permission denied")) {
+    if (fd && !errno) {
         while (fgets(buf, sizeof(buf), fd)) {
-                sscanf(buf, "%s : %f", heading, &val);
+            if (!strstr(buf, "Permission denied")) {
+                printf("<p>Cannot obtain data from sensor.</p>\n");
+                break;
+            }
 
-                if (strcmp(heading, "Temperature") == 0)
-                    T = val;
-                if (strcmp(heading,"Pressure") == 0)
-                    P = val;
-                if (strcmp(heading,"Humidity") == 0)
-                    H = val;
+            sscanf(buf, "%s : %f", heading, &val);
+
+            if (strcmp(heading, "Temperature") == 0)
+                T = val;
+            if (strcmp(heading,"Pressure") == 0)
+                P = val;
+            if (strcmp(heading,"Humidity") == 0)
+                H = val;
         }
         pclose(fd);
 
         fd = popen("/usr/local/welcome_html", "r");
-        while (!feof(fd) &&
-                (pos = fread(buf, sizeof(char), sizeof(buf), fd)) > 0)
-            fwrite(buf, sizeof(char), pos, stdout);
+        if (fd && !errno) {
+            while (!feof(fd) &&
+                    (pos = fread(buf, sizeof(char), sizeof(buf), fd)) > 0)
+                fwrite(buf, sizeof(char), pos, stdout);
 
-        pclose(fd);
+            pclose(fd);
+        }
 
         printf("<p>The sensor reports the following data:</p><p>");
 
@@ -79,13 +88,13 @@ char *argv[];
     }
 
     fd = fopen(INCL_POST, "r");
-    if (!fd) {
-	    printf("</body></html>");
-    } else {
+    if (fd && !errno) {
         while (!feof(fd) &&
                 (pos = fread(buf, sizeof(*buf), sizeof(buf), fd)) > 0)
             fwrite(buf, sizeof(*buf), pos, stdout);
 
         fclose(fd);
+    } else {
+        printf("</body></html>");
     }
 }

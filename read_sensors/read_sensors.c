@@ -2,8 +2,11 @@
  * sensors from memory-mapped device */
 
 #include <sys/file.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define ADDR_TEMP 017776100
 #define ADDR_PRES 017776102
