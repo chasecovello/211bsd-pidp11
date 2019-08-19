@@ -15,8 +15,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BUF_SIZE 4096
-#define REQ_LEN 512
+#define CGI_BIN
+#define BUF_SIZE 2048
+#define PATH_LEN 512
 #define WWW_ROOT "/var/www/"
 #define LOGFILE "/usr/adm/httpd.log"
 
@@ -25,95 +26,15 @@
 #define HTTP_404 "HTTP/1.1 404 Not Found"
 #define HTTP_500 "HTTP/1.1 500 Internal Server Error"
 
-int main(argc, argv)
-int argc;
-char *argv[];
+FILE *log;
+
+/* Get path information and handle errors */
+void chk_path(path, st)
+char *path;
+struct stat *st;
 {
-    FILE *log;
-    char *host;
-    long secs;
-    char *logtime;
-
-    struct hostent *hp;
-    struct sockaddr_in sin;
-    int sval;
-    
-    char buf[BUF_SIZE];
-    char path[REQ_LEN];
-    char req_verb[5];
-    char *ext;
-    
-    struct stat st;
-    FILE *fd;
-    int pos;
-    
-    int pid;
-    union wait status;
-
-    log = fopen(LOGFILE, "a");
-    if (!log) {
-        printf("%s\r\n", HTTP_500);
-        exit(1);
-    }
-
-    /* Log requesting host address */
-    sval = sizeof(sin);
-    if (getpeername(0, (struct sockaddr *)&sin, &sval) < 0)
-        fprintf("getpeername: %s ", strerror(errno));
-    if (hp = gethostbyaddr((char *)&sin.sin_addr.s_addr, 
-                sizeof(sin.sin_addr.s_addr), AF_INET))
-        host = hp->h_name;
-    else
-        host = inet_ntoa(sin.sin_addr);
-    fprintf(log, "%s ", host);
-    
-    /* Log request time */
-    time(&secs);
-    logtime = ctime(&secs);
-    /* Strip newline from ctime string */
-    logtime[strlen(logtime)-1] = '\0';
-    fprintf(log, "[%s] ", logtime);
-    
-    /* Path starts with WWW_ROOT */
-    strncpy(path, WWW_ROOT, sizeof(path));
-
-    while (fgets(buf, sizeof(buf), stdin)) {
-        
-        /* If present, remove trailing newline left by fgets() */
-        pos = strcspn(buf, "\r\n");
-        if (pos)
-            buf[pos] = '\0';
-        
-        /* Detect the double line break to end req header */
-        if (strlen(buf) < 5) {
-            fprintf(log, "No GET or POST in request\n");
-            fclose(log);
-            exit(1);
-        }
-
-        /* Get the path from the GET or POST request */
-        if (strstr(buf, "GET ") == buf ||
-	        strstr(buf, "POST ") == buf) {
-	        sscanf(buf, "%s %s", req_verb, &path[strlen(path)]);
-            fprintf(log, "\"%s\" ", buf);
-            break;
-        }
-    }
-
-    /* Check for parent directories in path */
-    if (strstr(path, "/..")) {
-        printf("%s\r\n", HTTP_403);
-        fprintf(log, "403 Request contains ..\n");
-        fclose(log);
-        exit(1);
-    }
-
-    /* Check that we are not going to dump an inode */
-    if (path[strlen(path)-1] == '/')
-        strncat(path, "index.html", REQ_LEN-strlen(path));
-    
-    /* Request information about the file and handle errors */
-    if (stat(path, &st) != 0) {
+    /* stat the path. If there's an error, log it and terminate. */ 
+    if (stat(path, st) != 0) {
         if (errno & (ENOENT | ENOTDIR | EINVAL | ENAMETOOLONG)) {
             fprintf(log, "404 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_404);
@@ -128,7 +49,109 @@ char *argv[];
         fclose(log);
         exit(1);
     }
+}
+
+int main(argc, argv)
+int argc;
+char *argv[];
+{
+    char path[PATH_LEN];
+    struct stat st;
     
+    /* Open log file, quit with HTTP 500 if there's an error */
+    log = fopen(LOGFILE, "a");
+    if (!log) {
+        printf("%s\r\n", HTTP_500);
+        exit(1);
+    }
+
+    /* Log requesting host address */
+    {
+        struct sockaddr_in sin;
+        int sval;
+        struct hostent *hp;
+        char *host;
+        
+        sval = sizeof(sin);
+        if (getpeername(0, (struct sockaddr *)&sin, &sval) == 0) {
+            /* This is a connected socket, so get the address */
+            if (hp = gethostbyaddr((char *)&sin.sin_addr.s_addr,
+                        sizeof(sin.sin_addr.s_addr), AF_INET))
+                host = hp->h_name;
+            else
+                host = inet_ntoa(sin.sin_addr);
+        } else {
+            /* Not a socket or address otherwise unavailable */
+            host = strerror(errno);
+        }
+        
+        fprintf(log, "%s ", host);
+    }
+
+    /* Log request time */
+    {
+        long secs;
+        char *logtime;
+
+        time(&secs);
+        logtime = ctime(&secs);
+        /* Strip trailing newline from ctime string */
+        logtime[strcspn(logtime, "\r\n")] = '\0';
+        fprintf(log, "[%s] ", logtime);
+    }
+
+    /* Path starts with WWW_ROOT */
+    strncpy(path, WWW_ROOT, sizeof(path));
+
+    /* Fill in path with GET/POST request */
+    {
+        char line[PATH_LEN];
+        char *lineptr;
+
+        while (fgets(line, sizeof(line), stdin)) {
+            
+            /* Remove trailing newline left by fgets() */
+            line[strcspn(line, "\r\n")] = '\0';
+            
+            /* Detect the double line break to end req header */
+            if (strlen(line) == 0)
+                break;
+
+            /* Get the path from the GET or POST request */
+            if (strstr(line, "GET ") == line ||
+                strstr(line, "POST ") == line) {
+                
+                fprintf(log, "\"%s\" ", line);
+
+                /* Append rest of request to path */
+                /* Skip request method */
+                strtok(line, " ");
+                /* Next token is path */
+                lineptr = strtok(NULL, " ");
+                if (lineptr)
+                    strncat(path, lineptr, sizeof(path)-strlen(path)-1);
+            }
+        }
+    }
+
+    /* Check for parent directories in path */
+    if (strstr(path, "/..")) {
+        printf("%s\r\n", HTTP_403);
+        fprintf(log, "403 Request contains \"..\"\n");
+        fclose(log);
+        exit(1);
+    }
+    
+    /* stat the path and handle errors */
+    chk_path(path, &st);
+
+    /* If a directory is requested, default page is index.html */
+    if (st.st_mode & S_IFDIR) {
+        strncat(path, "index.html", sizeof(path)-strlen(path)-1);
+        /* stat and handle errors again */
+        chk_path(path, &st);
+    }
+
     /* Only serve regular files */
     if (!(st.st_mode & S_IFREG)) {
         printf("%s\r\n", HTTP_403);
@@ -137,12 +160,16 @@ char *argv[];
         exit(1);
     }
 
+#ifdef CGI_BIN
     /* Check if a CGI program has been requested */
     if (strstr(path, "/cgi-bin/")) {
+
+        int pid;
+        union wait status;
         
         /* CGI program must be executable and not setuid/setgid */
-        if ((st.st_mode & (S_ISUID | S_ISGID)) ||
-                !(st.st_mode & S_IEXEC)) {
+        if (!(st.st_mode & S_IEXEC) ||
+                (st.st_mode & (S_ISUID | S_ISGID))) {
             printf("%s\r\n", HTTP_403);
             fprintf(log,
                     "403 File not executable and/or is setuid/setgid\n");
@@ -171,18 +198,25 @@ char *argv[];
                         status.w_termsig);
         }
 
-        fclose(log);
-        exit(0);
-
-    } else {
+    } else
+#endif /* CGI_BIN */
+    
+    /* Serve the file */
+    {         
+        FILE *fd;
+        char *ext;
+        
+        char buf[BUF_SIZE];
+        int pos;
 
         /* Open file */
         fd = fopen(path, "r");
         if (!fd) {
-            /* stat() above should have caught any errors, so we shouldn't
+            /* Earlier stat should have caught any errors, so we shouldn't
              * get here unless the file changed after the call */
             fprintf(log, "500 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_500);
+            fclose(log);
             exit(1);
         }
 
@@ -198,6 +232,8 @@ char *argv[];
             printf("Content-Type: text/html\r\n");
         else if (!strcmp(ext, ".jpg"))
             printf("Content-Type: image/jpeg\r\n");
+        else if (!strcmp(ext, ".ico"))
+            printf("Content-Type: image/x-icon\r\n");
         else
             printf("Content-Type: text/plain\r\n");
 
@@ -211,6 +247,5 @@ char *argv[];
     }
 
     fclose(log);
-
     return 0;
 }
