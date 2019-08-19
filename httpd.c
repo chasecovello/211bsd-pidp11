@@ -33,7 +33,7 @@ void chk_path(path, st)
 char *path;
 struct stat *st;
 {
-    /* stat the path. If there's an error, log it and terminate. */ 
+    /* stat the path. If there's an error, log it and terminate. */
     if (stat(path, st) != 0) {
         if (errno & (ENOENT | ENOTDIR | EINVAL | ENAMETOOLONG)) {
             fprintf(log, "404 %s\n", strerror(errno));
@@ -71,7 +71,7 @@ char *argv[];
         int sval;
         struct hostent *hp;
         char *host;
-        
+
         sval = sizeof(sin);
         if (getpeername(0, (struct sockaddr *)&sin, &sval) == 0) {
             /* This is a connected socket, so get the address */
@@ -84,7 +84,7 @@ char *argv[];
             /* Not a socket or address otherwise unavailable */
             host = strerror(errno);
         }
-        
+
         fprintf(log, "%s ", host);
     }
 
@@ -109,10 +109,10 @@ char *argv[];
         char *lineptr;
 
         while (fgets(line, sizeof(line), stdin)) {
-            
+
             /* Remove trailing newline left by fgets() */
             line[strcspn(line, "\r\n")] = '\0';
-            
+
             /* Detect the double line break to end req header */
             if (strlen(line) == 0)
                 break;
@@ -120,7 +120,7 @@ char *argv[];
             /* Get the path from the GET or POST request */
             if (strstr(line, "GET ") == line ||
                 strstr(line, "POST ") == line) {
-                
+
                 fprintf(log, "\"%s\" ", line);
 
                 /* Append rest of request to path */
@@ -200,12 +200,12 @@ char *argv[];
 
     } else
 #endif /* CGI_BIN */
-    
+
     /* Serve the file */
-    {         
+    {
         FILE *fd;
         char *ext;
-        
+
         char buf[BUF_SIZE];
         int pos;
 
