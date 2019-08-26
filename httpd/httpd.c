@@ -7,18 +7,19 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/errno.h>
+#include <sys/time.h>
 
 #include <netdb.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #define CGI_BIN
-#define BUF_SIZE 2048
+#define BUF_SIZE 256
 #define PATH_LEN 512
-#define WWW_ROOT "/var/www/"
+#define WWW_ROOT "/home/www/"
 #define LOGFILE "/usr/adm/httpd.log"
 
 #define HTTP_200 "HTTP/1.1 200 OK"
@@ -26,7 +27,7 @@
 #define HTTP_404 "HTTP/1.1 404 Not Found"
 #define HTTP_500 "HTTP/1.1 500 Internal Server Error"
 
-FILE *log;
+FILE *htlog;
 
 /* Get path information and handle errors */
 void chk_path(path, st)
@@ -36,17 +37,17 @@ struct stat *st;
     /* stat the path. If there's an error, log it and terminate. */
     if (stat(path, st) != 0) {
         if (errno & (ENOENT | ENOTDIR | EINVAL | ENAMETOOLONG)) {
-            fprintf(log, "404 %s\n", strerror(errno));
-            printf("%s\r\n", HTTP_404);
+            fprintf(htlog, "404 %s\n", strerror(errno));
+            printf("%s\r\n", HTTP_403);
         } else if (errno & EACCES) {
-            fprintf(log, "403 %s\n", strerror(errno));
+            fprintf(htlog, "403 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_403);
         } else {
-            fprintf(log, "500 %s\n", strerror(errno));
+            fprintf(htlog, "500 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_500);
         }
 
-        fclose(log);
+        fclose(htlog);
         exit(1);
     }
 }
@@ -57,10 +58,11 @@ char *argv[];
 {
     char path[PATH_LEN];
     struct stat st;
+    struct itimerval timeout;
     
     /* Open log file, quit with HTTP 500 if there's an error */
-    log = fopen(LOGFILE, "a");
-    if (!log) {
+    htlog = fopen(LOGFILE, "a");
+    if (!htlog) {
         printf("%s\r\n", HTTP_500);
         exit(1);
     }
@@ -85,7 +87,7 @@ char *argv[];
             host = strerror(errno);
         }
 
-        fprintf(log, "%s ", host);
+        fprintf(htlog, "%s ", host);
     }
 
     /* Log request time */
@@ -97,11 +99,20 @@ char *argv[];
         logtime = ctime(&secs);
         /* Strip trailing newline from ctime string */
         logtime[strcspn(logtime, "\r\n")] = '\0';
-        fprintf(log, "[%s] ", logtime);
+        fprintf(htlog, "[%s] ", logtime);
     }
 
     /* Path starts with WWW_ROOT */
     strncpy(path, WWW_ROOT, sizeof(path));
+
+    /* Set a timeout to terminate the process if the client is holding the
+     * socket open and not completing the http request */
+    timerclear(&timeout.it_interval);
+    timerclear(&timeout.it_value);
+    timeout.it_value.tv_sec = 60;
+    /* Default action for SIGALRM is to terminate the process, so no need
+     * to set up a signal handler */
+    setitimer(ITIMER_REAL, &timeout, 0);
 
     /* Fill in path with GET/POST request */
     {
@@ -121,7 +132,7 @@ char *argv[];
             if (strstr(line, "GET ") == line ||
                 strstr(line, "POST ") == line) {
 
-                fprintf(log, "\"%s\" ", line);
+                fprintf(htlog, "\"%s\" ", line);
 
                 /* Append rest of request to path */
                 /* Skip request method */
@@ -134,11 +145,16 @@ char *argv[];
         }
     }
 
+    /* Cancel the timeout onw that we have the http request */
+    timerclear(&timeout.it_interval);
+    timerclear(&timeout.it_value);
+    setitimer(ITIMER_REAL, &timeout, 0);
+
     /* Check for parent directories in path */
     if (strstr(path, "/..")) {
         printf("%s\r\n", HTTP_403);
-        fprintf(log, "403 Request contains \"..\"\n");
-        fclose(log);
+        fprintf(htlog, "403 Request contains \"..\"\n");
+        fclose(htlog);
         exit(1);
     }
     
@@ -155,8 +171,8 @@ char *argv[];
     /* Only serve regular files */
     if (!(st.st_mode & S_IFREG)) {
         printf("%s\r\n", HTTP_403);
-        fprintf(log, "403 Not a regular file\n");
-        fclose(log);
+        fprintf(htlog, "403 Not a regular file\n");
+        fclose(htlog);
         exit(1);
     }
 
@@ -171,30 +187,29 @@ char *argv[];
         if (!(st.st_mode & S_IEXEC) ||
                 (st.st_mode & (S_ISUID | S_ISGID))) {
             printf("%s\r\n", HTTP_403);
-            fprintf(log,
+            fprintf(htlog,
                     "403 File not executable and/or is setuid/setgid\n");
-            fclose(log);
+            fclose(htlog);
             exit(1);
         }
         
         /* Execute CGI program */
-        if (!(pid = fork())) {
+        if (!(pid = vfork())) {
             /* Child process */
             execve(path, NULL, NULL);
-            fprintf(log, "500 %s\n", strerror(errno));
+            fprintf(htlog, "500 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_500);
-            fclose(log);
-            exit(1);
+            _exit(1);
 
         } else {
             /* Parent process, wait for child to exit */
             wait(&status);
 
             if (WIFEXITED(status))
-                fprintf(log, "Exited with status %d\n",
+                fprintf(htlog, "Exited with status %d\n",
                         status.w_retcode);
             else if (WIFSIGNALED(status))
-                fprintf(log, "Terminated with signal %d\n",
+                fprintf(htlog, "Terminated with signal %d\n",
                         status.w_termsig);
         }
 
@@ -214,14 +229,14 @@ char *argv[];
         if (!fd) {
             /* Earlier stat should have caught any errors, so we shouldn't
              * get here unless the file changed after the call */
-            fprintf(log, "500 %s\n", strerror(errno));
+            fprintf(htlog, "500 %s\n", strerror(errno));
             printf("%s\r\n", HTTP_500);
-            fclose(log);
+            fclose(htlog);
             exit(1);
         }
 
         printf("%s\r\n", HTTP_200);
-        fprintf(log, "200 %ld\n", st.st_size);
+        fprintf(htlog, "200 %ld\n", st.st_size);
 
         /* Extract file type and output content-type header */
         ext = rindex(path, '.');
@@ -246,6 +261,6 @@ char *argv[];
         fclose(fd);
     }
 
-    fclose(log);
+    fclose(htlog);
     return 0;
 }
