@@ -29,7 +29,7 @@ make
 make install
 ```
 
-Add the following line to ~/etc/inetd.conf~:
+Add the following line to `/etc/inetd.conf`:
 
 ```
 http    stream  tcp     nowait  www     /usr/libexec/tcpd       httpd
