@@ -1,7 +1,6 @@
 # 2.11BSD httpd
 
-A simple web server for 2.11BSD on the PDP-11. Supports logging of HTTP
-requests, executing CGI binaries, and serving static documents.
+A simple web server for 2.11BSD on the PDP-11. Supports logging of HTTP requests, executing CGI binaries, and serving static documents.
 
 Originally written by Aaron S. Jackson, modified by Chase Covello.
 
@@ -10,23 +9,18 @@ https://github.com/AaronJackson/2.11BSDhttpd
 
 - Supports HTTP GET requests for static documents and CGI binaries.
 - Logs source hostname/IP and request to `/usr/adm/httpd.log`.
-- Has a 60 second timeout to terminate the process if the client fails to
-complete the HTTP request; timeout is disabled after getting the request
-and serving the requested file.
-- Will send HTML, images, favicons, and plain text; it's easy to add
-additional MIME types.
+- Has a 60 second timeout to terminate the process if the client fails to complete the HTTP request; timeout is disabled after getting the request and serving the requested file.
+- Will send HTML, images, favicons, and plain text; it's easy to add additional MIME types.
 - Assumes web root is `/home/www/`.
-- CGI binaries must be in a directory called `cgi-bin/`, must be executable,
-and must not be setuid/setgid.
-- Effort has been made to eliminate security issues, but probably still
-insecure.
+- CGI binaries must be in a directory called `cgi-bin/`, must be executable, and must not be setuid/setgid.
+- Effort has been made to eliminate security issues, but probably still insecure.
 - Contributions very welcome.
 
 If the systems are running, see the web server in action:
 - http://catbert.rhwyd.co.uk or http://emubert.rhwyd.co.uk (Aaron)
 - http://chasecovello.ddns.net (Chase)
 
-** Setup Instructions
+## Setup Instructions
 
 Copy `httpd.c` and `Makefile` to your PDP-11, compile, and install:
 
@@ -45,11 +39,7 @@ or
 http    stream  tcp     nowait  www     /usr/libexec/httpd      httpd
 ```
 
-Using `tcpd` instead of directly calling `httpd` (you can if you
-like), will allow you to user your `hosts.allow` file to limit
-access. If `inetd` was compiled with `-DPARANOID` (it probably was),
-it will also block hosts which have wrong reverse DNS records, which
-may not be desirable.
+Using `tcpd` instead of directly calling `httpd` (you can if you like), will allow you to user your `hosts.allow` file to limit access. If `inetd` was compiled with `-DPARANOID` (it probably was), it will also block hosts which have wrong reverse DNS records, which may not be desirable.
 
 Append the following line to `/etc/services`:
 
@@ -57,8 +47,7 @@ Append the following line to `/etc/services`:
 http            80/tcp
 ```
 
-Create a `www` user account for the web server. Use `vipw` to edit the
-`passwd` file and add the following line:
+Create a `www` user account for the web server. Use `vipw` to edit the `passwd` file and add the following line:
 
 ```
 www:*:80:10::0:0:HTTPD Owner,,,:/home/www:nologin
@@ -71,5 +60,4 @@ ps aux | grep inetd
 kill -HUP <PID>
 ```
 
-Finally, create `/home/www/index.html`, along with your other files,
-and ensure they are readable by `www`, or world readable.
+Finally, create `/home/www/index.html`, along with your other files, and ensure they are readable by `www`, or world readable.
