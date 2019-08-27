@@ -1,4 +1,4 @@
-DESTDIR= /var/www/cgi-bin
+DESTDIR= /home/www/cgi-bin
 CFLAGS= -O
 PROGRAM=	weather
 SRCS=		weather.c

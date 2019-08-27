@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INCL_PRE  "/var/www/cgi-bin/include/weather.incl-pre"
-#define INCL_POST "/var/www/cgi-bin/include/weather.incl-post"
+#define INCL_PRE  "/home/www/cgi-bin/include/weather.incl-pre"
+#define INCL_POST "/home/www/cgi-bin/include/weather.incl-post"
 #define BUF_SIZE 256
 
 int main(argc,argv)
