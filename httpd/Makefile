@@ -4,6 +4,7 @@ PROGRAM=	httpd
 SRCS=		httpd.c
 OBJS=		httpd.o
 LIBS=
+LOGFILE=	/usr/adm/httpd.log
 
 all:	${PROGRAM}
 
@@ -12,6 +13,10 @@ ${PROGRAM}:	${OBJS}
 
 install: ${PROGRAM}
 	install -s -m 755 ${PROGRAM} ${DESTDIR}
+	touch ${LOGFILE}
+	chown www ${LOGFILE}
+	chgrp staff ${LOGFILE}
+	chmod 644 ${LOGFILE}
 
 tags:
 	ctags -tdw *.c
