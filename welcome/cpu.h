@@ -11,4 +11,3 @@ FILE	*fp;
 #define LIGHT	/* If you want the stuff inside the welcome box inversed,
 		   keep this defined. To make it dark, just comment it out. */
 #define TTY	/* If you want the tty box, keep this define		*/
-#define POSIX

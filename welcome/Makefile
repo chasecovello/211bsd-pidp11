@@ -1,5 +1,5 @@
 #	
-#	Makefile for welcome.  Revised 1996/1/28
+#	Makefile for welcome.  Revised 2019/08/26
 #
 DESTDIR= /usr/local
 BINDIR=	bin
