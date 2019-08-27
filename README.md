@@ -1,7 +1,6 @@
 # 211bsd-pidp11
 
-This is a testing distribution of 2.11BSD for the PiDP-11. There is a drop-in
-replacement disk image for the BSD system included in Oscar Vermeulen's ~systems.tar.gz~. The source code for the programs here, including ~httpd~, are also included in the disk image under ~/home/user/src~.
+This is a testing distribution of 2.11BSD for the PiDP-11. There is a drop-in replacement disk image for the BSD system included in Oscar Vermeulen's `systems.tar.gz`. The source code for the programs here, including `httpd`, are also included in the disk image under `/home/user/src`.
 
 For more information on the PiDP-11, see:
 https://obsolescence.wixsite.com/obsolescence/pidp-11
