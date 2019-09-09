@@ -147,7 +147,9 @@ sudo systemctl start cups-lpd.socket
 #+END_SRC
 
 Then use the printer setup tool to set up your printer, make sure it's set as
-shared, and make sure the name is the same as the one in ~printcap~ on BSD.
+shared, and take note of the name of the printer assigned by CUPS; you will
+be adding it to the ~printcap~ file on BSD.
+
 ~cups-lpd~ doesn't appear to do any authentication, so it's probably also a
 good idea to set up a firewall to only accept incoming connections to port
 515/tcp from your 2.11BSD IP.
