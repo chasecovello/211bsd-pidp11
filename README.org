@@ -18,7 +18,7 @@ Quick Tour of 2.11BSD", to get the system set up:
 If you're using the PiDP-11 distribution, unpack the ~2.11BSD_rq.dsk~ and put
 the disk image in ~/opt/pidp11/systems/211bsd/~. Boot BSD in the normal way
 (i.e., set the panel switches to 0102 octal and press the address rotary
-switch to reboot the emulator).
+switch to reboot the emulator). Press enter at the boot prompt.
 
 The system will start in single user mode by default. It's a very good idea to
 always check the filesystems before doing anything else:
