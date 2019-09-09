@@ -5,11 +5,9 @@ replacement disk image for the BSD system included in Oscar Vermeulen's
 ~systems.tar.gz~. The source code for the programs here, including ~httpd~,
 are also included in the disk image under ~/home/user/src/~.
 
-- For more information on the PiDP-11, see:
-https://obsolescence.wixsite.com/obsolescence/pidp-11
+- For more information on the PiDP-11, see: https://obsolescence.wixsite.com/obsolescence/pidp-11
 
-- For more useful tools and guides for 2.11BSD:
-https://github.com/rricharz/pidp11-2.11bsd
+- For more useful tools and guides for 2.11BSD: https://github.com/rricharz/pidp11-2.11bsd
 
 ** Getting started
 
