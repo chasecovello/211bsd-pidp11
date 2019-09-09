@@ -70,11 +70,11 @@ example programs and plot files for use with Rene Richarz' Tektronix 4010
 graphics terminal emulator.
 
 See the following pages for instructions:
-https://github.com/rricharz/pidp11-2.11bsd/blob/master/Tek.pdf
-https://github.com/rricharz/pidp11-2.11bsd/blob/master/Tek.odt
+- https://github.com/rricharz/pidp11-2.11bsd/blob/master/Tek.pdf
+- https://github.com/rricharz/pidp11-2.11bsd/blob/master/Tek.odt
 
 Tek4010 terminal emulator for Linux/X:
-https://github.com/rricharz/Tek4010
+- https://github.com/rricharz/Tek4010
 
 *** Set up a web server
 Aaron Jackson wrote a simple web server, which I added a few features to,
@@ -84,8 +84,12 @@ should see a default ~index.html~. The document root is ~/home/www/~. More
 documentation and the source code are available in ~/home/user/src/httpd/~.
 
 There is an example CGI program in ~/home/user/src/weather/~. It prints the
-output of two commands, ~welcome_html~ and ~weather~. Source for those is also
-included in ~/home/user/src/~.
+output of two commands, ~welcome_html~ and ~weather~. ~weather~ itself relies
+on ~read_sensors~, which reads temperature and pressure sensor data from
+a memory-mapped sensor device; see
+https://obsolescence.wixsite.com/obsolescence/pidp-11-temp-barometer-hack
+for further information. Source for all these programs is also included in
+~/home/user/src/~.
 
 You can see the web server with CGI in action (assuming my PiDP-11 is up) at
 http://chasecovello.ddns.net/.
@@ -160,8 +164,8 @@ man printcap | lpr
 Traditionally, 2.11BSD booted into single-user mode, where the administrator
 could perform manual system maintenance before bringing the system up in
 multi-user mode. See
-https://github.com/rricharz/pidp11-2.11bsd/blob/master/Maintenance.pdf
-https://github.com/rricharz/pidp11-2.11bsd/blob/master/Maintenance.odt
+- https://github.com/rricharz/pidp11-2.11bsd/blob/master/Maintenance.pdf
+- https://github.com/rricharz/pidp11-2.11bsd/blob/master/Maintenance.odt
 for a quick overview of Unix system maintenance tasks.
 
 It's much more convenient, though, to boot right into multi-user mode, even if
