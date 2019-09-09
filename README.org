@@ -40,6 +40,7 @@ networking.
 ** Things to try once the system is up
 
 *** Set a password for the user accounts on the system
+
 You can log in as ~root~, ~user~, and ~textronix~ with no password. It's a good
 idea to set passwords for these accounts using ~passwd~, especially if you plan
 to connect the system to a network. A lot of network services are enabled by
@@ -52,6 +53,7 @@ name to the ~wheel~ group in ~/etc/group~, which will allow you to ~su~ to
 ~root~ while logged in as your user.
 
 *** Set up networking
+
 You will need to edit ~/etc/hosts~, ~/etc/netstart~, and ~/etc/resolv.conf~
 with the correct IP addresses. You can also change the hostname if you want.
 If you're a vi user, this is a great opportunity to use the original BSD ~vi~.
@@ -63,6 +65,7 @@ you're stuck with ~ed~. I'm sorry. At least it's better than toggling data in
 with the panel switches.
 
 *** Display high-resolution graphics with the Tektronix 4010 terminal emulator
+
 Log in as user ~tektronix~. The directories under ~/home/tektronix/~ contain
 example programs and plot files for use with Rene Richarz' Tektronix 4010
 graphics terminal emulator.
@@ -75,6 +78,7 @@ Tek4010 terminal emulator for Linux/X:
 - https://github.com/rricharz/Tek4010
 
 *** Set up a web server
+
 Aaron Jackson wrote a simple web server, which I added a few features to,
 including logging and basic CGI support. It's running by default; once you have
 networking set up, point a web browser to your 2.11BSD IP address and you
@@ -93,6 +97,7 @@ You can see the web server with CGI in action (assuming my PiDP-11 is up) at
 http://chasecovello.ddns.net/.
 
 *** Set up printing
+
 You can set up a print server on Raspbian (or anywhere else, really), and then
 configure 2.11BSD ~lpd~ to send print jobs to the remote ~lpd~ server.
 
@@ -159,6 +164,7 @@ man printcap | lpr
 #+END_SRC
 
 *** Rebuild the bootloader to automatically boot into multi-user mode
+
 Traditionally, 2.11BSD booted into single-user mode, where the administrator
 could perform manual system maintenance before bringing the system up in
 multi-user mode. See
