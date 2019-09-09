@@ -174,7 +174,7 @@ for a quick overview of Unix system maintenance tasks.
 
 It's much more convenient, though, to boot right into multi-user mode, even if
 it's not historically accurate. Recent updates to the bootloader allow you to
-set this up. This is also a great introduction to the ~/usr/src~ tree, and how
+set this up. This is also a great introduction to the ~/usr/src/~ tree, and how
 easy it is to rebuild the entire system from the included source.
 
 Johnny Billquist provides instructions:
