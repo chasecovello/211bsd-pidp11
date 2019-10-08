@@ -41,7 +41,7 @@ networking.
 
 *** Set a password for the user accounts on the system
 
-You can log in as ~root~, ~user~, and ~textronix~ with no password. It's a good
+You can log in as ~root~, ~user~, and ~tektronix~ with no password. It's a good
 idea to set passwords for these accounts using ~passwd~, especially if you plan
 to connect the system to a network. A lot of network services are enabled by
 default, including ftp, telnet, rsh, and rlogin.
