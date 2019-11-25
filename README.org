@@ -61,9 +61,17 @@ If you're a vi user, this is a great opportunity to use the original BSD ~vi~.
 It's not as fancy as vim but it works fine. If you like emacs, ~jove~ is an
 emacs clone that comes installed.
 
-If you're in single-user mode, the terminal isn't yet set up correctly and
-you're stuck with ~ed~. I'm sorry. At least it's better than toggling data in
-with the panel switches.
+If you're in single-user mode, the terminal isn't yet set up correctly, so
+~vi~ won't work. If you don't want to be stuck with ~ed~, you can set up the
+terminal manually:
+
+#+BEGIN_SRC
+TERM=vt100
+export TERM
+stty rows 24
+#+END_SRC
+
+(Replace ~24~ with the number of rows in your terminal)
 
 *** Display high-resolution graphics with the Tektronix 4010 terminal emulator
 
