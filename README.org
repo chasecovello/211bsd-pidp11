@@ -1,4 +1,5 @@
 * 211bsd-pidp11
+** Patch level 456
 
 This is a testing distribution of 2.11BSD for the PiDP-11. There is a drop-in
 replacement disk image for the BSD system included in Oscar Vermeulen's
@@ -21,22 +22,18 @@ the normal way (i.e., set the panel switches to 0102 octal and press the
 address rotary switch to reboot the emulator). Press enter at the boot
 prompt.
 
-The system will start in single user mode by default. It's a very good idea to
-always check the filesystems before doing anything else:
+The system now starts in multi-user mode by default. Johnny Billquist's patch
+456 implemented a "clean" flag in the filesystem, which allows ~fsck~ to skip
+the boot-time check if the system was previously shut down cleanly. This cuts
+a lot of time off the boot sequence and makes it more practical to boot
+directly into multi-user mode.
 
-#+BEGIN_SRC
-fsck -p -t scratch
-#+END_SRC
+Since this is the first boot and you have not yet configured networking on
+the system, it will appear to hang for a few minutes as the services try to
+use the network. See below for instructions on configuring networking.
 
-This will take a few minutes, but it's worth the time. Unless you know for sure
-that the system shut down cleanly, not checking the disks after a reboot is a
-good way to end up with filesystem corruption.
-
-Press ~Ctrl-D~ to bring up multi-user mode and start networking and default
-system services. Since this is the first boot and you have not yet configured
-networking on the system, it will appear to hang for a few minutes as the
-services try to use the network. See below for instructions on configuring
-networking.
+If you want to boot into single-user mode, see the section
+at the end of this document.
 
 ** Things to try once the system is up
 
@@ -60,18 +57,6 @@ with the correct IP addresses. You can also change the hostname if you want.
 If you're a vi user, this is a great opportunity to use the original BSD ~vi~.
 It's not as fancy as vim but it works fine. If you like emacs, ~jove~ is an
 emacs clone that comes installed.
-
-If you're in single-user mode, the terminal isn't yet set up correctly, so
-~vi~ won't work. If you don't want to be stuck with ~ed~, you can set up the
-terminal manually:
-
-#+BEGIN_SRC
-TERM=vt100
-export TERM
-stty rows 24
-#+END_SRC
-
-(Replace ~24~ with the number of rows in your terminal)
 
 *** Display high-resolution graphics with the Tektronix 4010 terminal emulator
 
@@ -174,7 +159,44 @@ After that, you can try printing a file:
 man printcap | lpr
 #+END_SRC
 
-*** Rebuild the bootloader to automatically boot into multi-user mode
+** Single-user mode
+
+If you want to boot into single-user mode (to perform system maintenance, or
+to have the maximum amount of memory available for, say, a kernel recompile),
+press a key at the bootloader prompt, then type:
+
+#+BEGIN_SRC
+unix -s
+#+END_SRC
+
+If you do this, it's still a good idea to check the filesystems before doing
+anything else:
+
+#+BEGIN_SRC
+fsck -p -t scratch
+#+END_SRC
+
+As noted above, this will be fast if the system was shut down cleanly last
+time. If not, it may take 10 minutes or so (on a Raspberry Pi 3B+). It's
+worth the time -- not checking a dirty filesystem is a good way to end up
+with filesystem corruption.
+
+If you're in single-user mode, the terminal isn't yet set up correctly, so
+~vi~ won't work. If you don't want to be stuck with ~ed~, you can set up the
+terminal manually:
+
+#+BEGIN_SRC
+TERM=vt100
+export TERM
+stty rows 24
+#+END_SRC
+
+(Replace ~24~ with the number of rows in your terminal)
+
+Press ~Ctrl-D~ to bring up multi-user mode and start networking and default
+system services.
+
+*** How to rebuild the bootloader to boot into single-user mode by default
 
 Traditionally, 2.11BSD booted into single-user mode, where the administrator
 could perform manual system maintenance before bringing the system up in
@@ -183,20 +205,22 @@ multi-user mode. See
 - https://github.com/rricharz/pidp11-2.11bsd/blob/master/Maintenance.odt
 for a quick overview of Unix system maintenance tasks.
 
-It's much more convenient, though, to boot right into multi-user mode, even if
-it's not historically accurate. Recent updates to the bootloader allow you to
-set this up. This is also a great introduction to the ~/usr/src/~ tree, and how
-easy it is to rebuild the entire system from the included source.
+The 2.11BSD bootloader was recently updated to allow booting directly into
+multi-user mode, and this has been enabled by default. However, if you want
+to have an installation that's both less convenient and less anachronistic,
+you can rebuild the bootloader to bring back the old behavior.
 
-Johnny Billquist provides instructions:
+This is also a great introduction to the ~/usr/src/~ tree, and how easy it is
+to rebuild the entire system from the included source. Here's how to do it
+(instructions adapted from Johnny Billquist's original):
 
 1. cd to ~/usr/src/sys/pdpstand/~
 2. Edit ~boot.c~. Look for a line that says:
 
 #+BEGIN_SRC
-#define AUTOMULTIUSER 0         /* 0 = old behaviour, !0 = new (automatic) behaviour */
+#define AUTOMULTIUSER 1         /* 0 = old behaviour, !0 = new (automatic) behaviour */
 #+END_SRC
 
-3. Change the define to a 1.
+3. Change the define to a 0.
 4. ~make install~
-5. Reboot and be happy. 
+5. Reboot. 
