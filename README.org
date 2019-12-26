@@ -224,3 +224,10 @@ to rebuild the entire system from the included source. Here's how to do it
 3. Change the define to a 0.
 4. ~make install~
 5. Reboot. 
+
+
+** Kernel compiling hints:
+- Copy PIDP11 or ZEKE to a new config filename in ~/usr/src/sys/conf~
+- ~./config NEWCONFIGNAME~
+- ~cd /usr/src/sys/NEWCONFIGNAME ; make~
+- If you get a ~ld: too big for type 431~ error while building a new kernel, you will need to move object files into different overlays in the Makefile. http://www.dnull.com/bsd/oldnews/bsdnew62161.html fully explains why this is so and how to make the modifications, but tl;dr: ~size unix.o~, look for any overlay >8192, and move one of the ~OV1~ through ~OV9~ .o files into a less occupied overlay.  Run ~make~ and ~size unix.o~ until you have the overlay size situation rebalanced.  Then proceed with ~make install~
