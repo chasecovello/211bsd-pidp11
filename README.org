@@ -242,6 +242,6 @@ any overlay >8192, and move one of the ~OV1~ through ~OV9~ .o files into a
 less occupied overlay. Run ~make~ and ~size unix.o~ until you have the
 overlay size situation rebalanced. Then proceed with ~make install~.
 
-The kernel used for this distribution is PIDP11. For that kernel OV6 is the
-overlay that is too big, and moving toy.o to OV8 will allow it to
-build successfully.
+The kernel used for this distribution is PIDP11. For that kernel ~OV6~ is the
+overlay that is too big, and moving ~toy.o~ to ~OV8~ will allow it to build
+successfully.
