@@ -136,7 +136,7 @@ StandardInput=socket
 WantedBy=multi-user.target
 #+END_SRC
 
-Enable ~cups-lpr~:
+Enable ~cups-lpd~:
 
 #+BEGIN_SRC
 sudo systemctl enable cups-lpd.socket
@@ -230,18 +230,21 @@ to rebuild the entire system from the included source. Here's how to do it
 
 ** Kernel compiling hints:
 
-1. Copy PIDP11 or ZEKE to a new config filename in ~/usr/src/sys/conf/~
+1. Copy PIDP11 to a new config filename in ~/usr/src/sys/conf/~
 2. ~./config NEWCONFIGNAME~
 3. ~cd /usr/src/sys/NEWCONFIGNAME ; make~
 
 If you get a ~ld: too big for type 431~ error while building a new kernel,
 you will need to move object files into different overlays in the Makefile.
 http://www.dnull.com/bsd/oldnews/bsdnew62161.html fully explains why this
-is so and how to make the modifications, but tl;dr: ~size unix.o~, look for
-any overlay >8192, and move one of the ~OV1~ through ~OV9~ .o files into a
-less occupied overlay. Run ~make~ and ~size unix.o~ until you have the
-overlay size situation rebalanced. Then proceed with ~make install~.
+is so and how to make the modifications, but tl;dr:
 
-The kernel used for this distribution is PIDP11. For that kernel ~OV6~ is the
-overlay that is too big, and moving ~toy.o~ to ~OV8~ will allow it to build
-successfully.
+~size unix.o~. If any overlay is bigger than 8192, move one of the ~OV1~
+through ~OV9~ .o files into a smaller overlay. If ~text~ is bigger than
+57344, move one of the ~BASE~ .o files into an overlay. Run ~make~ and ~size
+unix.o~ until you have the base and overlay size situation rebalanced. Then
+proceed with ~make install~.
+
+The kernel used for this distribution is PIDP11. For that kernel both
+~BASE~ and ~OV6~ are too big; moving ~lp.o~ from ~BASE~ to ~OV5~ and
+~init_main.o~ from ~OV6~ to ~OV5~ will allow it to build successfully.
