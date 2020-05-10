@@ -1,10 +1,13 @@
 * 211bsd-pidp11
-** Patch level 458
+** Patch level 462
 
 This is a testing distribution of 2.11BSD for the PiDP-11. There is a drop-in
 replacement disk image for the BSD system included in Oscar Vermeulen's
 ~systems.tar.gz~. The source code for the programs here, including ~httpd~,
 are also included in the disk image under ~/home/user/src/~.
+
+I try to keep this distribution up to date with the latest patches, which are
+available at ftp://ftp.update.uu.se/pub/pdp11/2.11BSD/Patches/
 
 - For more information on the PiDP-11, see: https://obsolescence.wixsite.com/obsolescence/pidp-11
 
@@ -133,7 +136,7 @@ StandardInput=socket
 WantedBy=multi-user.target
 #+END_SRC
 
-Enable ~cups-lpr~:
+Enable ~cups-lpd~:
 
 #+BEGIN_SRC
 sudo systemctl enable cups-lpd.socket
@@ -224,3 +227,24 @@ to rebuild the entire system from the included source. Here's how to do it
 3. Change the define to a 0.
 4. ~make install~
 5. Reboot. 
+
+** Kernel compiling hints:
+
+1. Copy PIDP11 to a new config filename in ~/usr/src/sys/conf/~
+2. ~./config NEWCONFIGNAME~
+3. ~cd /usr/src/sys/NEWCONFIGNAME ; make~
+
+If you get a ~ld: too big for type 431~ error while building a new kernel,
+you will need to move object files into different overlays in the Makefile.
+http://www.dnull.com/bsd/oldnews/bsdnew62161.html fully explains why this
+is so and how to make the modifications, but tl;dr:
+
+~size unix.o~. If any overlay is bigger than 8192, move one of the ~OV1~
+through ~OV9~ .o files into a smaller overlay. If ~text~ is bigger than
+57344, move one of the ~BASE~ .o files into an overlay. Run ~make~ and ~size
+unix.o~ until you have the base and overlay size situation rebalanced. Then
+proceed with ~make install~.
+
+The kernel used for this distribution is PIDP11. For that kernel both
+~BASE~ and ~OV6~ are too big; moving ~lp.o~ from ~BASE~ to ~OV5~ and
+~init_main.o~ from ~OV6~ to ~OV5~ will allow it to build successfully.
